@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ollama Learning Hub - Streaming</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">🤖 Ollama Learning Hub</div>
+            <ul class="nav-links">
+                <li><a href="/" title="Learn the basics of making simple API requests">🏠 Basic</a></li>
+                <li><a href="/streaming" class="active" title="Discover real-time streaming responses">📡 Streaming</a></li>
+                <li><a href="/chat" title="Build multi-turn conversations with context">💬 Chat</a></li>
+                <li><a href="/prompting" title="Master prompt engineering techniques">💡 Prompting</a></li>
+                <li><a href="/advanced" title="Explore temperature tuning and model comparisons">🚀 Advanced</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="content">
+            <header class="page-header">
+                <h1>📡 Streaming Responses</h1>
+                <p>Get responses in real-time with token streaming</p>
+                <div class="status-bar online" id="statusBar">✅ Streaming ready</div>
+            </header>
+
+            <div class="main-grid">
+                <div class="panel">
+                    <h2>📝 Configuration</h2>
+                    
+                    <div class="form-group">
+                        <label for="smodel">Model:</label>
+                        <select id="smodel">
+                            {% for model in models %}
+                            <option value="{{ model }}" {% if model == 'neural-chat:latest' %}selected{% endif %}>{{ model }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="stemperature">Temperature:</label>
+                        <div class="slider-container">
+                            <input type="range" id="stemperature" min="0" max="1" step="0.1" value="0.7">
+                            <span id="stempValue">0.7</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="sprompt">Prompt:</label>
+                        <textarea id="sprompt" rows="10" placeholder="Enter your prompt...">Tell me an interesting fact about space</textarea>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="streamGenerate()" title="Stream the response in real-time as it is being generated">
+                        🎬 Stream Response
+                    </button>
+                </div>
+
+                <div class="panel">
+                    <h2>💬 Streaming Output</h2>
+                    <div id="streamResponse" class="response-box">
+                        <p class="placeholder">Response will stream here...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>💡 How Streaming Works</h2>
+                <div style="background: rgba(0,0,0,0.2); padding: 1.5rem; border-radius: 0.5rem; margin-top: 1rem;">
+                    <p><strong>✅ Streaming Benefits:</strong></p>
+                    <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                        <li>See responses appear in real-time</li>
+                        <li>Better user experience</li>
+                        <li>Lower perceived latency</li>
+                        <li>Can be cancelled anytime</li>
+                    </ul>
+                    <p style="margin-top: 1rem;"><strong>🔧 How it works:</strong></p>
+                    <pre style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin-top: 0.5rem;">payload["stream"] = True
+for chunk in response.iter_lines():
+    token = json.loads(chunk)["response"]
+    print(token, end="", flush=True)</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('stemperature').addEventListener('input', function() {
+            document.getElementById('stempValue').textContent = this.value;
+        });
+
+        function streamGenerate() {
+            const prompt = document.getElementById('sprompt').value;
+            const model = document.getElementById('smodel').value;
+            const temperature = parseFloat(document.getElementById('stemperature').value);
+            const btn = event.target;
+
+            if (!prompt) {
+                alert('Please enter a prompt');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '⏳ Streaming...';
+
+            const responseBox = document.getElementById('streamResponse');
+            responseBox.innerHTML = '<p class="loading">🤔 Streaming response...</p>';
+
+            fetch('/api/generate', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({prompt, model, temperature})
+            })
+            .then(r => {
+                if (!r.ok) throw new Error('API error: ' + r.status);
+                return r.json();
+            })
+            .then(data => {
+                console.log('Response received:', data);
+                if (data.status === 'success') {
+                    const responseText = data.response || 'No response received';
+                    responseBox.innerHTML = '<p>' + responseText.replace(/\n/g, '<br>') + '</p>';
+                } else {
+                    const errorMsg = data.response || data.error || 'Unknown error';
+                    responseBox.innerHTML = '<p class="error">❌ ' + errorMsg + '</p>';
+                }
+                btn.disabled = false;
+                btn.textContent = '🎬 Stream Response';
+            })
+            .catch(e => {
+                console.error('Error:', e);
+                responseBox.innerHTML = '<p class="error">❌ Error: ' + e.message + '</p>';
+                btn.disabled = false;
+                btn.textContent = '🎬 Stream Response';
+            });
+        }
+    </script>
+</body>
+</html>

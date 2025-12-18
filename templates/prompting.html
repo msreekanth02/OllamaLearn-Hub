@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ollama Learning Hub - Prompt Engineering</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">🤖 Ollama Learning Hub</div>
+            <ul class="nav-links">
+                <li><a href="/" title="Learn the basics of making simple API requests">🏠 Basic</a></li>
+                <li><a href="/streaming" title="Discover real-time streaming responses">📡 Streaming</a></li>
+                <li><a href="/chat" title="Build multi-turn conversations with context">💬 Chat</a></li>
+                <li><a href="/prompting" class="active" title="Master prompt engineering techniques">💡 Prompting</a></li>
+                <li><a href="/advanced" title="Explore temperature tuning and model comparisons">🚀 Advanced</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="content">
+            <header class="page-header">
+                <h1>💡 Prompt Engineering</h1>
+                <p>Learn techniques to craft better prompts</p>
+            </header>
+
+            <div id="promptComparison" class="panel">
+                <h2>🎯 Technique: Specificity</h2>
+                <p style="color: var(--text-muted); margin-bottom: 1rem;">Compare vague vs specific prompts and see the difference!</p>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
+                    <div>
+                        <h3 style="color: var(--error); margin-bottom: 0.5rem;">❌ Vague Prompt</h3>
+                        <textarea id="vaguePrompt" style="width: 100%; height: 200px;">Tell me about Python</textarea>
+                    </div>
+                    <div>
+                        <h3 style="color: var(--success); margin-bottom: 0.5rem;">✅ Specific Prompt</h3>
+                        <textarea id="specificPrompt" style="width: 100%; height: 200px;">Write a Python function that takes a list of numbers and returns the average. Include detailed comments explaining each step.</textarea>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" onclick="comparePrompts()" title="Generate and compare responses to both prompts to see the difference">
+                    🔄 Compare Responses
+                </button>
+
+                <div id="comparisonResults" style="margin-top: 1rem; display: none;">
+                    <h3 style="color: var(--error); margin: 1rem 0 0.5rem;">❌ Vague Response:</h3>
+                    <div class="response-box" id="vagueResponse"></div>
+
+                    <h3 style="color: var(--success); margin: 1rem 0 0.5rem;">✅ Specific Response:</h3>
+                    <div class="response-box" id="specificResponse"></div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>🎓 Prompting Techniques</h2>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 1rem;">
+                    <div style="background: rgba(99,102,241,0.05); padding: 1.5rem; border-radius: 0.5rem; border-left: 3px solid var(--primary);">
+                        <h3>🎭 Role-Playing</h3>
+                        <p style="color: var(--text-muted); margin-top: 0.5rem;">Assign a role to the model</p>
+                        <pre style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 0.5rem; margin-top: 0.5rem; font-size: 0.9rem; overflow-x: auto;">You are a physics professor.
+Explain quantum computing
+to a 10-year-old.</pre>
+                    </div>
+
+                    <div style="background: rgba(16,185,129,0.05); padding: 1.5rem; border-radius: 0.5rem; border-left: 3px solid var(--success);">
+                        <h3>📋 Format Specification</h3>
+                        <p style="color: var(--text-muted); margin-top: 0.5rem;">Specify output format</p>
+                        <pre style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 0.5rem; margin-top: 0.5rem; font-size: 0.9rem; overflow-x: auto;">List 5 benefits of exercise.
+Format as: 
+1. [Benefit]: [Description]</pre>
+                    </div>
+
+                    <div style="background: rgba(139,92,246,0.05); padding: 1.5rem; border-radius: 0.5rem; border-left: 3px solid var(--secondary);">
+                        <h3>🔗 Step-by-Step</h3>
+                        <p style="color: var(--text-muted); margin-top: 0.5rem;">Ask for reasoning process</p>
+                        <pre style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 0.5rem; margin-top: 0.5rem; font-size: 0.9rem; overflow-x: auto;">Solve this step by step.
+Show your work for each step:
+What's 15% of 200?</pre>
+                    </div>
+
+                    <div style="background: rgba(245,158,11,0.05); padding: 1.5rem; border-radius: 0.5rem; border-left: 3px solid var(--warning);">
+                        <h3>📝 Examples</h3>
+                        <p style="color: var(--text-muted); margin-top: 0.5rem;">Provide examples to learn from</p>
+                        <pre style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 0.5rem; margin-top: 0.5rem; font-size: 0.9rem; overflow-x: auto;">Good: "You are helpful"
+Bad: "You are rude"
+Now rate: "You are silent"</pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>🧪 Test Your Own Prompt</h2>
+                <div class="form-group">
+                    <label for="customPrompt">Enter any prompt:</label>
+                    <textarea id="customPrompt" rows="6" placeholder="Your prompt here..."></textarea>
+                </div>
+                <button class="btn btn-primary" onclick="testCustomPrompt()" title="Test your custom prompt and see how the AI responds">
+                    🚀 Test Prompt
+                </button>
+                <div id="customResult" class="response-box" style="margin-top: 1rem; display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function comparePrompts() {
+            const vague = document.getElementById('vaguePrompt').value;
+            const specific = document.getElementById('specificPrompt').value;
+            const model = 'neural-chat';
+
+            document.getElementById('comparisonResults').style.display = 'block';
+            document.getElementById('vagueResponse').innerHTML = '<p class="loading">🤔 Generating vague response...</p>';
+            document.getElementById('specificResponse').innerHTML = '<p class="loading">🤔 Generating specific response...</p>';
+
+            // Get vague response
+            fetch('/api/generate', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({prompt: vague, model, temperature: 0.7})
+            })
+            .then(r => {
+                if (!r.ok) throw new Error('API error: ' + r.status);
+                return r.json();
+            })
+            .then(data => {
+                if (data.status === 'success') {
+                    const text = data.response || 'No response received';
+                    document.getElementById('vagueResponse').innerHTML = '<p>' + text.replace(/\n/g, '<br>') + '</p>';
+                } else {
+                    const errorMsg = data.response || data.error || 'Unknown error';
+                    document.getElementById('vagueResponse').innerHTML = '<p class="error">❌ ' + errorMsg + '</p>';
+                }
+            })
+            .catch(e => {
+                document.getElementById('vagueResponse').innerHTML = '<p class="error">❌ Error: ' + e.message + '</p>';
+            });
+
+            // Get specific response
+            fetch('/api/generate', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({prompt: specific, model, temperature: 0.7})
+            })
+            .then(r => {
+                if (!r.ok) throw new Error('API error: ' + r.status);
+                return r.json();
+            })
+            .then(data => {
+                if (data.status === 'success') {
+                    const text = data.response || 'No response received';
+                    document.getElementById('specificResponse').innerHTML = '<p>' + text.replace(/\n/g, '<br>') + '</p>';
+                } else {
+                    const errorMsg = data.response || data.error || 'Unknown error';
+                    document.getElementById('specificResponse').innerHTML = '<p class="error">❌ ' + errorMsg + '</p>';
+                }
+            })
+            .catch(e => {
+                document.getElementById('specificResponse').innerHTML = '<p class="error">❌ Error: ' + e.message + '</p>';
+            });
+        }
+
+        function testCustomPrompt() {
+            const prompt = document.getElementById('customPrompt').value;
+            
+            if (!prompt) {
+                alert('Please enter a prompt');
+                return;
+            }
+
+            const resultDiv = document.getElementById('customResult');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<p class="loading">🤔 Generating response...</p>';
+
+            fetch('/api/generate', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({prompt, model: 'neural-chat', temperature: 0.7})
+            })
+            .then(r => {
+                if (!r.ok) throw new Error('API error: ' + r.status);
+                return r.json();
+            })
+            .then(data => {
+                if (data.status === 'success') {
+                    const text = data.response || 'No response received';
+                    resultDiv.innerHTML = '<p>' + text.replace(/\n/g, '<br>') + '</p>';
+                } else {
+                    const errorMsg = data.response || data.error || 'Unknown error';
+                    resultDiv.innerHTML = '<p class="error">❌ ' + errorMsg + '</p>';
+                }
+            })
+            .catch(e => {
+                resultDiv.innerHTML = '<p class="error">❌ Error: ' + e.message + '</p>';
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ollama Learning Hub - Chat</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">🤖 Ollama Learning Hub</div>
+            <ul class="nav-links">
+                <li><a href="/" title="Learn the basics of making simple API requests">🏠 Basic</a></li>
+                <li><a href="/streaming" title="Discover real-time streaming responses">📡 Streaming</a></li>
+                <li><a href="/chat" class="active" title="Build multi-turn conversations with context">💬 Chat</a></li>
+                <li><a href="/prompting" title="Master prompt engineering techniques">💡 Prompting</a></li>
+                <li><a href="/advanced" title="Explore temperature tuning and model comparisons">🚀 Advanced</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="content">
+            <header class="page-header">
+                <h1>💬 Multi-Turn Chat</h1>
+                <p>Have a conversation with context awareness</p>
+            </header>
+
+            <div class="main-grid">
+                <div class="panel">
+                    <h2>🤖 Chatbot</h2>
+                    
+                    <div class="form-group">
+                        <label for="cmodel">Model:</label>
+                        <select id="cmodel">
+                            {% for model in models %}
+                            <option value="{{ model }}" {% if model == 'neural-chat:latest' %}selected{% endif %}>{{ model }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="csystemPrompt">System Prompt:</label>
+                        <textarea id="csystemPrompt" rows="5" placeholder="Define the bot's personality...">You are a helpful Python programming tutor. Explain concepts clearly and provide code examples.</textarea>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="initChat()" title="Initialize the chatbot and start a new conversation">
+                        🚀 Start Chat
+                    </button>
+
+                    <div style="margin-top: 1rem;">
+                        <button class="btn" style="width: 100%; background: rgba(239, 68, 68, 0.1); color: var(--error);" onclick="clearChat()" title="Clear all conversation history and start fresh">
+                            🗑️ Clear History
+                        </button>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h2>💭 Conversation</h2>
+                    <div id="chatBox" class="response-box" style="min-height: 550px; display: flex; flex-direction: column;">
+                        <p class="placeholder">Start a conversation above...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>💬 Your Message</h2>
+                <div style="display: grid; grid-template-columns: 1fr auto; gap: 1rem;">
+                    <input type="text" id="chatInput" placeholder="Type your message..." style="padding: 0.75rem;" onkeypress="if(event.key==='Enter') sendMessage()">
+                    <button class="btn btn-primary" onclick="sendMessage()" style="width: auto;" title="Send your message to the assistant and get a response">
+                        ➤ Send
+                    </button>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>📚 About Conversation History</h2>
+                <div style="background: rgba(0,0,0,0.2); padding: 1.5rem; border-radius: 0.5rem;">
+                    <p>💡 <strong>How Context Works:</strong></p>
+                    <pre style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 0.5rem; margin-top: 0.5rem; overflow-x: auto;">System: You are a helpful tutor...
+
+User: What is a list?
+Assistant: A list is...
+
+User: How do I add items?
+Assistant: You can use append()...  ← Knows context!</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let chatHistory = [];
+        let chatInitialized = false;
+
+        function initChat() {
+            chatInitialized = true;
+            chatHistory = [];
+            document.getElementById('chatBox').innerHTML = '<p style="color: var(--success);">✅ Chat initialized. Start typing!</p>';
+            document.getElementById('chatInput').focus();
+        }
+
+        function clearChat() {
+            chatHistory = [];
+            document.getElementById('chatBox').innerHTML = '<p class="placeholder">Conversation cleared. Start a new chat...</p>';
+        }
+
+        function sendMessage() {
+            if (!chatInitialized) {
+                alert('Please start a chat first');
+                return;
+            }
+
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+
+            if (!message) return;
+
+            const chatBox = document.getElementById('chatBox');
+            
+            // Add user message to display
+            const userMsg = document.createElement('div');
+            userMsg.style.cssText = 'padding: 0.5rem 0; border-bottom: 1px solid rgba(99,102,241,0.2);';
+            userMsg.innerHTML = '<strong style="color: var(--primary);">👤 You:</strong> ' + message;
+            chatBox.appendChild(userMsg);
+
+            // Add to history
+            chatHistory.push({user: message, assistant: ""});
+
+            // Clear input
+            input.value = '';
+
+            // Build prompt with history
+            const systemPrompt = document.getElementById('csystemPrompt').value;
+            let fullPrompt = 'System: ' + systemPrompt + '\n\n';
+            
+            for (let i = 0; i < chatHistory.length - 1; i++) {
+                fullPrompt += 'User: ' + chatHistory[i].user + '\nAssistant: ' + chatHistory[i].assistant + '\n\n';
+            }
+            
+            fullPrompt += 'User: ' + message + '\nAssistant:';
+
+            // Get response
+            const model = document.getElementById('cmodel').value;
+            
+            const assistantMsg = document.createElement('div');
+            assistantMsg.style.cssText = 'padding: 0.5rem 0; margin-top: 0.5rem; color: var(--success);';
+            assistantMsg.innerHTML = '<strong>🤖 Assistant:</strong> <span id="assistantResponse">Thinking...</span>';
+            chatBox.appendChild(assistantMsg);
+
+            fetch('/api/generate', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({prompt: fullPrompt, model, temperature: 0.7})
+            })
+            .then(r => {
+                if (!r.ok) throw new Error('API error: ' + r.status);
+                return r.json();
+            })
+            .then(data => {
+                console.log('Chat response received:', data);
+                if (data.status === 'success') {
+                    const response = (data.response || 'No response').trim();
+                    chatHistory[chatHistory.length - 1].assistant = response;
+                    document.getElementById('assistantResponse').textContent = response;
+                } else {
+                    const errorMsg = data.response || data.error || 'Unknown error';
+                    document.getElementById('assistantResponse').textContent = '❌ Error: ' + errorMsg;
+                }
+                chatBox.scrollTop = chatBox.scrollHeight;
+            })
+            .catch(e => {
+                console.error('Chat error:', e);
+                document.getElementById('assistantResponse').textContent = '❌ Error: ' + e.message;
+                chatBox.scrollTop = chatBox.scrollHeight;
+            });
+        }
+    </script>
+</body>
+</html>

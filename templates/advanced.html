@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ollama Learning Hub - Advanced</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">🤖 Ollama Learning Hub</div>
+            <ul class="nav-links">
+                <li><a href="/" title="Learn the basics of making simple API requests">🏠 Basic</a></li>
+                <li><a href="/streaming" title="Discover real-time streaming responses">📡 Streaming</a></li>
+                <li><a href="/chat" title="Build multi-turn conversations with context">💬 Chat</a></li>
+                <li><a href="/prompting" title="Master prompt engineering techniques">💡 Prompting</a></li>
+                <li><a href="/advanced" class="active" title="Explore temperature tuning and model comparisons">🚀 Advanced</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="content">
+            <header class="page-header">
+                <h1>🚀 Advanced Features</h1>
+                <p>Explore temperature tuning and model comparisons</p>
+            </header>
+
+            <!-- Temperature Tuning -->
+            <div class="panel">
+                <h2>🌡️ Temperature Tuning</h2>
+                <p style="color: var(--text-muted); margin-bottom: 1rem;">Temperature controls how creative or deterministic the responses are.</p>
+                
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem;">
+                    <button class="example-btn" onclick="testTemperature(0.1, this)" title="Test with low temperature for factual, precise responses">
+                        <span class="icon">📚</span>
+                        <span>Precise<br>(0.1)</span>
+                    </button>
+                    <button class="example-btn" onclick="testTemperature(0.5, this)" title="Test with medium temperature for balanced responses">
+                        <span class="icon">⚖️</span>
+                        <span>Balanced<br>(0.5)</span>
+                    </button>
+                    <button class="example-btn" onclick="testTemperature(0.9, this)" title="Test with high temperature for creative, varied responses">
+                        <span class="icon">🎨</span>
+                        <span>Creative<br>(0.9)</span>
+                    </button>
+                </div>
+
+                <div class="form-group">
+                    <label for="tempPrompt">Prompt to test:</label>
+                    <textarea id="tempPrompt" rows="5">Write one sentence about sunrise</textarea>
+                </div>
+
+                <div id="tempResults" style="margin-top: 1rem; display: none;">
+                    <div id="tempResult" class="response-box"></div>
+                </div>
+            </div>
+
+            <!-- Model Comparison -->
+            <div class="panel">
+                <h2>🏆 Model Comparison</h2>
+                <p style="color: var(--text-muted); margin-bottom: 1rem;">Compare performance across different models.</p>
+
+                <div class="form-group">
+                    <label for="compPrompt">Comparison prompt:</label>
+                    <textarea id="compPrompt" rows="5">What is machine learning?</textarea>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                    <button class="btn btn-primary" onclick="compareModel('neural-chat')" title="Test neural-chat model with your prompt">
+                        ⚡ Test neural-chat
+                    </button>
+                    <button class="btn btn-primary" onclick="compareModel('mistral')" title="Test mistral model with your prompt">
+                        💪 Test mistral
+                    </button>
+                </div>
+
+                <div id="compResults" style="display: none;">
+                    <div id="model1Result"></div>
+                    <div id="model2Result"></div>
+                </div>
+            </div>
+
+            <!-- Response Length Control -->
+            <div class="panel">
+                <h2>📏 Response Length Control</h2>
+                <p style="color: var(--text-muted); margin-bottom: 1rem;">Control how many tokens are generated.</p>
+
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem;">
+                    <button class="example-btn" onclick="testLength(50, this)" title="Generate a short response (approximately 50 tokens)">
+                        <span class="icon">📄</span>
+                        <span>Short<br>(50)</span>
+                    </button>
+                    <button class="example-btn" onclick="testLength(150, this)" title="Generate a medium response (approximately 150 tokens)">
+                        <span class="icon">📖</span>
+                        <span>Medium<br>(150)</span>
+                    </button>
+                    <button class="example-btn" onclick="testLength(300, this)" title="Generate a long response (approximately 300 tokens)">
+                        <span class="icon">📚</span>
+                        <span>Long<br>(300)</span>
+                    </button>
+                </div>
+
+                <div class="form-group">
+                    <label for="lengthPrompt">Prompt to test:</label>
+                    <textarea id="lengthPrompt" rows="5">Tell me about artificial intelligence</textarea>
+                </div>
+
+                <div id="lengthResults" style="margin-top: 1rem; display: none;">
+                    <div id="lengthResult" class="response-box"></div>
+                </div>
+            </div>
+
+            <!-- System Information -->
+            <div class="main-grid">
+                <div class="panel">
+                    <h2>📊 Available Models</h2>
+                    <div id="modelList"></div>
+                </div>
+
+                <div class="panel">
+                    <h2>💡 Quick Tips</h2>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--border);">
+                            <strong style="color: var(--primary);">⚡ Speed vs Quality</strong>
+                            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.3rem;">Larger models are more capable but slower</p>
+                        </li>
+                        <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--border);">
+                            <strong style="color: var(--primary);">🎯 Choose Right Model</strong>
+                            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.3rem;">Use fast models for quick responses</p>
+                        </li>
+                        <li style="padding: 0.5rem 0;">
+                            <strong style="color: var(--primary);">🔧 Adjust Temperature</strong>
+                            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.3rem;">Lower for factual, higher for creative</p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function testTemperature(temp, btn) {
+            const prompt = document.getElementById('tempPrompt').value;
+            if (!prompt) {
+                alert('Please enter a prompt');
+                return;
+            }
+
+            const resultsDiv = document.getElementById('tempResults');
+            resultsDiv.style.display = 'block';
+            document.getElementById('tempResult').innerHTML = '<p class="loading">🤔 Generating...</p>';
+
+            fetch('/api/generate', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({prompt, model: 'neural-chat', temperature: temp})
+            })
+            .then(r => {
+                if (!r.ok) throw new Error('API error: ' + r.status);
+                return r.json();
+            })
+            .then(data => {
+                const label = temp === 0.1 ? 'Precise' : temp === 0.5 ? 'Balanced' : 'Creative';
+                if (data.status === 'success') {
+                    const text = data.response || 'No response received';
+                    document.getElementById('tempResult').innerHTML = 
+                        '<p><strong>' + label + ' (Temp: ' + temp + '):</strong></p><p>' + text.replace(/\n/g, '<br>') + '</p>';
+                } else {
+                    const errorMsg = data.response || data.error || 'Unknown error';
+                    document.getElementById('tempResult').innerHTML = '<p class="error">❌ ' + errorMsg + '</p>';
+                }
+            })
+            .catch(e => {
+                document.getElementById('tempResult').innerHTML = '<p class="error">❌ Error: ' + e.message + '</p>';
+            });
+        }
+
+        function testLength(length, btn) {
+            const prompt = document.getElementById('lengthPrompt').value;
+            if (!prompt) {
+                alert('Please enter a prompt');
+                return;
+            }
+
+            const resultsDiv = document.getElementById('lengthResults');
+            resultsDiv.style.display = 'block';
+            document.getElementById('lengthResult').innerHTML = '<p class="loading">🤔 Generating...</p>';
+
+            fetch('/api/generate', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({prompt, model: 'neural-chat', temperature: 0.7})
+            })
+            .then(r => {
+                if (!r.ok) throw new Error('API error: ' + r.status);
+                return r.json();
+            })
+            .then(data => {
+                const label = length === 50 ? 'Short' : length === 150 ? 'Medium' : 'Long';
+                if (data.status === 'success') {
+                    const text = data.response || 'No response received';
+                    document.getElementById('lengthResult').innerHTML = 
+                        '<p><strong>' + label + ' Response (' + length + ' tokens max):</strong></p><p>' + 
+                        text.replace(/\n/g, '<br>') + '</p>';
+                } else {
+                    const errorMsg = data.response || data.error || 'Unknown error';
+                    document.getElementById('lengthResult').innerHTML = '<p class="error">❌ ' + errorMsg + '</p>';
+                }
+            })
+            .catch(e => {
+                document.getElementById('lengthResult').innerHTML = '<p class="error">❌ Error: ' + e.message + '</p>';
+            });
+        }
+
+        function compareModel(model) {
+            const prompt = document.getElementById('compPrompt').value;
+            if (!prompt) {
+                alert('Please enter a prompt');
+                return;
+            }
+
+            const resultsDiv = document.getElementById('compResults');
+            resultsDiv.style.display = 'block';
+            document.getElementById('model1Result').innerHTML = '<p class="loading">🤔 Testing ' + model + '...</p>';
+
+            fetch('/api/generate', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({prompt, model, temperature: 0.7})
+            })
+            .then(r => {
+                if (!r.ok) throw new Error('API error: ' + r.status);
+                return r.json();
+            })
+            .then(data => {
+                if (data.status === 'success') {
+                    const text = data.response || 'No response received';
+                    document.getElementById('model1Result').innerHTML = 
+                        '<div class="response-box"><p><strong>' + model + ':</strong></p><p>' + 
+                        text.replace(/\n/g, '<br>') + '</p><p style="margin-top: 1rem; color: var(--text-muted); font-size: 0.9rem;">⏱️ ' + 
+                        (data.duration || 0).toFixed(2) + 's | 📊 ' + (data.tokens || 0) + ' tokens</p></div>';
+                } else {
+                    const errorMsg = data.response || data.error || 'Unknown error';
+                    document.getElementById('model1Result').innerHTML = '<p class="error">❌ ' + errorMsg + '</p>';
+                }
+            })
+            .catch(e => {
+                document.getElementById('model1Result').innerHTML = '<p class="error">❌ Error: ' + e.message + '</p>';
+            });
+        }
+
+        // Load model list on page load
+        window.addEventListener('load', function() {
+            fetch('/api/models')
+                .then(r => r.json())
+                .then(data => {
+                    let html = '';
+                    for (let model of data.models) {
+                        html += '<div style="padding: 0.5rem 0; border-bottom: 1px solid var(--border);">';
+                        html += '<strong>' + model.name + '</strong>';
+                        html += '<p style="color: var(--text-muted); font-size: 0.9rem;">Size: ' + model.size.toFixed(2) + ' GB</p>';
+                        html += '</div>';
+                    }
+                    document.getElementById('modelList').innerHTML = html;
+                });
+        });
+    </script>
+</body>
+</html>

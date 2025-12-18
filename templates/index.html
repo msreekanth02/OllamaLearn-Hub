@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ollama Learning Hub - Basic Requests</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">🤖 Ollama Learning Hub</div>
+            <ul class="nav-links">
+                <li><a href="/" class="active" title="Learn the basics of making simple API requests">🏠 Basic</a></li>
+                <li><a href="/streaming" title="Discover real-time streaming responses">📡 Streaming</a></li>
+                <li><a href="/chat" title="Build multi-turn conversations with context">💬 Chat</a></li>
+                <li><a href="/prompting" title="Master prompt engineering techniques">💡 Prompting</a></li>
+                <li><a href="/advanced" title="Explore temperature tuning and model comparisons">🚀 Advanced</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="content">
+            <!-- Header -->
+            <header class="page-header">
+                <h1>🎯 Basic Requests</h1>
+                <p>Learn how to make simple requests to Ollama</p>
+                <div class="status-bar" id="statusBar">
+                    <span id="status">Checking server...</span>
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <div class="main-grid">
+                <!-- Left Panel - Input -->
+                <div class="panel">
+                    <h2>📝 Your Prompt</h2>
+                    
+                    <div class="form-group">
+                        <label for="model">Model:</label>
+                        <select id="model">
+                            {% for model in models %}
+                            <option value="{{ model }}" {% if model == 'neural-chat:latest' %}selected{% endif %}>
+                                {{ model }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="temperature">Temperature (Creativity):</label>
+                        <div class="slider-container">
+                            <input type="range" id="temperature" min="0" max="1" step="0.1" value="0.7">
+                            <span id="tempValue">0.7</span>
+                        </div>
+                        <small>0.1 = Factual | 0.7 = Balanced | 0.9 = Creative</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="prompt">Prompt:</label>
+                        <textarea id="prompt" placeholder="Ask me anything..." rows="10">What is machine learning? Explain in 2-3 sentences.</textarea>
+                    </div>
+
+                    <button id="generateBtn" class="btn btn-primary" onclick="generate()" title="Send your prompt to the AI model and get a response">
+                        ✨ Generate
+                    </button>
+                </div>
+
+                <!-- Right Panel - Output -->
+                <div class="panel">
+                    <h2>💬 Response</h2>
+                    <div id="response" class="response-box">
+                        <p class="placeholder">Your response will appear here...</p>
+                    </div>
+
+                    <div id="stats" class="stats-box" style="display: none;">
+                        <h3>📊 Statistics</h3>
+                        <div class="stats-grid">
+                            <div class="stat">
+                                <span class="label">Tokens:</span>
+                                <span id="tokens" class="value">-</span>
+                            </div>
+                            <div class="stat">
+                                <span class="label">Speed:</span>
+                                <span id="duration" class="value">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Examples Section -->
+            <div class="examples-section">
+                <h2>📚 Try These Examples</h2>
+                <div class="examples-grid">
+                    <button class="example-btn" onclick="loadExample('What is artificial intelligence?')" title="Load and run a question & answer example">
+                        <span class="icon">❓</span>
+                        <span>Q&A</span>
+                    </button>
+                    <button class="example-btn" onclick="loadExample('Write a haiku about programming')" title="Load a creative writing example">
+                        <span class="icon">🎨</span>
+                        <span>Creative</span>
+                    </button>
+                    <button class="example-btn" onclick="loadExample('Write Python code to reverse a string')" title="Load a code generation example">
+                        <span class="icon">👨‍💻</span>
+                        <span>Code</span>
+                    </button>
+                    <button class="example-btn" onclick="loadExample('Explain quantum computing like I am 5')" title="Load a simplified explanation example">
+                        <span class="icon">🧠</span>
+                        <span>ELI5</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Update temperature display
+        document.getElementById('temperature').addEventListener('input', function() {
+            document.getElementById('tempValue').textContent = this.value;
+        });
+
+        // Check server status
+        function checkStatus() {
+            fetch('/api/status')
+                .then(r => r.json())
+                .then(data => {
+                    const status = document.getElementById('statusBar');
+                    if (data.status === 'online') {
+                        status.className = 'status-bar online';
+                        status.innerHTML = '✅ Ollama server is online';
+                    } else {
+                        status.className = 'status-bar offline';
+                        status.innerHTML = '❌ Ollama server is offline. Run: ollama serve';
+                    }
+                });
+        }
+
+        function generate() {
+            const prompt = document.getElementById('prompt').value;
+            const model = document.getElementById('model').value;
+            const temperature = parseFloat(document.getElementById('temperature').value);
+            const btn = document.getElementById('generateBtn');
+            
+            if (!prompt) {
+                alert('Please enter a prompt');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '⏳ Processing...';
+            
+            const responseBox = document.getElementById('response');
+            responseBox.innerHTML = '<p class="loading">🤔 Thinking...</p>';
+
+            fetch('/api/generate', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({prompt, model, temperature})
+            })
+            .then(r => {
+                if (!r.ok) throw new Error('API error: ' + r.status);
+                return r.json();
+            })
+            .then(data => {
+                console.log('Response received:', data);
+                if (data.status === 'success') {
+                    const responseText = data.response || 'No response received';
+                    responseBox.innerHTML = '<p>' + responseText.replace(/\n/g, '<br>') + '</p>';
+                    
+                    document.getElementById('tokens').textContent = data.tokens || 0;
+                    document.getElementById('duration').textContent = (data.duration || 0).toFixed(2) + 's';
+                    document.getElementById('stats').style.display = 'block';
+                } else {
+                    const errorMsg = data.response || data.error || 'Unknown error';
+                    responseBox.innerHTML = '<p class="error">❌ ' + errorMsg + '</p>';
+                }
+                btn.disabled = false;
+                btn.textContent = '✨ Generate';
+            })
+            .catch(e => {
+                console.error('Error:', e);
+                responseBox.innerHTML = '<p class="error">❌ Error: ' + e.message + '</p>';
+                btn.disabled = false;
+                btn.textContent = '✨ Generate';
+            });
+        }
+
+        function loadExample(text) {
+            document.getElementById('prompt').value = text;
+            document.getElementById('prompt').focus();
+        }
+
+        // Check status on load
+        checkStatus();
+        setInterval(checkStatus, 5000);
+    </script>
+</body>
+</html>
